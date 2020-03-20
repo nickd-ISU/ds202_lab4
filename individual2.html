@@ -369,10 +369,7 @@ summary {
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+<p>Part 1</p>
 <pre class="r"><code>library(readxl)
 library(ggplot2)
 library(dplyr)</code></pre>
@@ -464,7 +461,20 @@ str(defClean)</code></pre>
 ##  $ Class     : chr  &quot;Redshirt Senior&quot; &quot;Redshirt Senior&quot; &quot;Redshirt Freshman&quot; &quot;Redshirt Senior&quot; ...
 ##  $ Hometown  : chr  &quot;Cedar Rapids, Iowa&quot; &quot;Nixa, Mo.&quot; &quot;Seffner, Fla.&quot; &quot;Naperville, Ill.&quot; ...
 ##  $ Highschool: chr  &quot;Washington&quot; &quot;Nixa&quot; &quot;Armwood&quot; &quot;Central&quot; ...</code></pre>
-</div>
+<p>Part 2</p>
+<pre class="r"><code>defClean &lt;-defClean %&gt;% pivot_longer(Tackles_Solo:Tackles_ASST,names_to = &quot;Statistic&quot;)
+head(defClean)</code></pre>
+<pre><code>## # A tibble: 6 x 11
+##   Name  Opponent Tackles_TFL Tackles_Sack Turnover_FF Turnover_FR Turnover_INT
+##   &lt;fct&gt; &lt;fct&gt;          &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;
+## 1 Whit… UNI                0            0           0           0            0
+## 2 Whit… UNI                0            0           0           0            0
+## 3 Whit… Iowa               0            0           0           0            0
+## 4 Whit… Iowa               0            0           0           0            0
+## 5 Whit… ULM                0            0           0           0            1
+## 6 Whit… ULM                0            0           0           0            1
+## # … with 4 more variables: Pass_QBH &lt;dbl&gt;, Pass_PB &lt;dbl&gt;, Statistic &lt;chr&gt;,
+## #   value &lt;dbl&gt;</code></pre>
 
 
 

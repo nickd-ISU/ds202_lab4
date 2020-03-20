@@ -58,6 +58,23 @@ str(bioClean)
 
 Part 2
 ```{r}
+defClean <-defClean %>% pivot_longer(Tackles_Solo:Pass_PB,names_to = "Statistic")
 
+ggplot(data=defClean, aes(x=value))+geom_histogram()+facet_wrap(~Statistic)
+
+unique(defClean$Opponent)
+helper<-c("West Virginia","Kansas State")
+#ggplot(data=defClean%>%filter(Opponent %in% helper),aes(x=))
+
+
+bioClean <- bioClean %>% separate(Hometown, c("city","state"),",")
+bioClean%>% group_by(state)%>% summarize(number=n())
+
+
+```
+
+Part 3
+```{r}
+offDataJoin
 ```
 
