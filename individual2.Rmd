@@ -17,9 +17,20 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ```{r }
 library(readxl)
+library(ggplot2)
+library(dplyr)
 defense <- read_excel('cyclonesFootball2019.xlsx', sheet='Defensive')
 str(defense)
 
-defense <-defense 
+defense <-defense %>% rename(Opponent=Opponent_Opponent) %>% mutate(Opponent=factor(Opponent))
+defense <-defense %>% mutate(Name=factor(Name))
+lvls <- as.character(sort(unique(defense$Opponent)))
+lvls <- c('UNI', lvls[lvls != 'UNI'])
+defense <- defense %>% mutate(Opponent = factor(Opponent, lvls))
+
+defense <- defense%>%mutate_at(c("Tackles_Solo","Tackles_ASST","Tackles_TFL","Tackles_Sack","Turnover_FF","Turnover_FR","Turnover_INT","Pass_QBH","Pass_PB"),as.numeric)
+str(defense)
+
+
 ```
 
