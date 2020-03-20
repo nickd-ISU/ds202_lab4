@@ -9,4 +9,71 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r message=FALSE}
 
+library(dplyr)
+library(readxl)
+library(tidyverse)
+defense <- read_excel('cyclonesFootball2019.xlsx', sheet='Defensive')
+offensive <- read_excel('cyclonesFootball2019.xlsx', sheet='Offensive')
+biography <- read_excel('cyclonesFootball2019.xlsx', sheet='Biography')
+
+```
+
+### Part One
+
+```{r warning=FALSE}
+# Player and opponent names as factors
+defense$Name <- factor(defense$Name)
+defense$Opponent_Opponent <- factor(defense$Opponent_Opponent)
+# All offensive and defensive statistics made numeric
+defClean <- defense %>%
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:11)) %>%
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:11)) 
+
+offClean <- offensive %>%
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:12)) %>%
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:12)) 
+
+bioClean <- biography %>%
+  separate(Height, into = c("Feet", "Inches")) %>%
+  mutate(Height = (as.numeric(Feet)*12 + as.numeric(Inches))) %>%
+  select(-c("Feet", "Inches"))
+
+  
+
+str(defClean)
+str(offClean)
+str(bioClean)
+
+```
+
+### Part 2
+
+```{r}
+
+defClean <- defClean %>%
+  pivot_longer(Tackles_Solo:Pass_PB, names_to = "Statistic", values_to = "values")
+
+defClean %>%
+  ggplot(aes(x=values)) + geom_histogram() + facet_wrap(~Statistic)
+
+```
+
+**Description:** The rare defensive statistics will be the ones happening around 0 times per game. So, intuitively, these statistics are Turnover_INT, Turnover_FR, Turnover_FF, and Tackles_Sack. 
+
+```{r}
+
+testdf <- defClean %>%
+  filter(Opponent_Opponent == "Kansas State" | Opponent_Opponent == "West Virginia") %>%
+  filter(Statistic == "Tackles_Solo") %>%
+  pivot_wider(names_from = "Opponent_Opponent", values_from = "values")
+
+colnames(testdf)[colnames(testdf) == "West Virginia"] <- "West.Virginia"
+colnames(testdf)[colnames(testdf) == "Kansas State"] <- "Kansas.State"
+
+testdf
+
+ggplot(testdf, aes(x=West.Virginia, y=Kansas.State)) + geom_point()
+
+```
