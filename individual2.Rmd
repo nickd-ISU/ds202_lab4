@@ -9,18 +9,18 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Part 1
 
 ```{r }
 library(readxl)
 library(ggplot2)
 library(dplyr)
+library(tidyverse)
 defense <- read_excel('cyclonesFootball2019.xlsx', sheet='Defensive')
-str(defense)
+offensive <- read_excel('cyclonesFootball2019.xlsx', sheet='Offensive')
+biography <- read_excel('cyclonesFootball2019.xlsx', sheet='Biography')
+#str(defense)
+#str(offensive)
 
 defense <-defense %>% rename(Opponent=Opponent_Opponent) %>% mutate(Opponent=factor(Opponent))
 defense <-defense %>% mutate(Name=factor(Name))
@@ -29,8 +29,35 @@ lvls <- c('UNI', lvls[lvls != 'UNI'])
 defense <- defense %>% mutate(Opponent = factor(Opponent, lvls))
 
 defense <- defense%>%mutate_at(c("Tackles_Solo","Tackles_ASST","Tackles_TFL","Tackles_Sack","Turnover_FF","Turnover_FR","Turnover_INT","Pass_QBH","Pass_PB"),as.numeric)
-str(defense)
+#str(defense)
 
+offensive <-offensive %>% rename(Opponent=Opponent_Opponent) %>% mutate(Opponent=factor(Opponent))
+offensive <-offensive %>% mutate(Name=factor(Name))
+lvls <- as.character(sort(unique(offensive$Opponent)))
+lvls <- c('UNI', lvls[lvls != 'UNI'])
+offensive <- offensive %>% mutate(Opponent = factor(Opponent, lvls))
+
+offensive <- offensive %>%mutate_if(is.character,as.numeric,na.rm=TRUE)
+#str(offensive)
+
+biography <-biography %>% mutate(Name=factor(Name))
+biography <- biography %>% mutate_at(c("Weight"),as.numeric)
+height1 <-strsplit(biography$Height,"-")
+biography$Height <-str_replace_all(biography$Height,'-','.')
+biography<-biography%>% mutate(Height=as.numeric(Height)* 0.3048) 
+#str(biography)
+
+defClean <-defense
+offClean <- offensive
+bioClean <- biography
+
+str(defClean)
+str(offClean)
+str(bioClean)
+```
+
+Part 2
+```{r}
 
 ```
 

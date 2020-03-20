@@ -373,6 +373,97 @@ summary {
 <h2>R Markdown</h2>
 <p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
 <p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+<pre class="r"><code>library(readxl)
+library(ggplot2)
+library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: 'dplyr'</code></pre>
+<pre><code>## The following objects are masked from 'package:stats':
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ tibble  2.1.3     ✓ purrr   0.3.3
+## ✓ tidyr   1.0.0     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>defense &lt;- read_excel('cyclonesFootball2019.xlsx', sheet='Defensive')
+offensive &lt;- read_excel('cyclonesFootball2019.xlsx', sheet='Offensive')
+biography &lt;- read_excel('cyclonesFootball2019.xlsx', sheet='Biography')
+#str(defense)
+#str(offensive)
+
+defense &lt;-defense %&gt;% rename(Opponent=Opponent_Opponent) %&gt;% mutate(Opponent=factor(Opponent))
+defense &lt;-defense %&gt;% mutate(Name=factor(Name))
+lvls &lt;- as.character(sort(unique(defense$Opponent)))
+lvls &lt;- c('UNI', lvls[lvls != 'UNI'])
+defense &lt;- defense %&gt;% mutate(Opponent = factor(Opponent, lvls))
+
+defense &lt;- defense%&gt;%mutate_at(c(&quot;Tackles_Solo&quot;,&quot;Tackles_ASST&quot;,&quot;Tackles_TFL&quot;,&quot;Tackles_Sack&quot;,&quot;Turnover_FF&quot;,&quot;Turnover_FR&quot;,&quot;Turnover_INT&quot;,&quot;Pass_QBH&quot;,&quot;Pass_PB&quot;),as.numeric)
+#str(defense)
+
+offensive &lt;-offensive %&gt;% rename(Opponent=Opponent_Opponent) %&gt;% mutate(Opponent=factor(Opponent))
+offensive &lt;-offensive %&gt;% mutate(Name=factor(Name))
+lvls &lt;- as.character(sort(unique(offensive$Opponent)))
+lvls &lt;- c('UNI', lvls[lvls != 'UNI'])
+offensive &lt;- offensive %&gt;% mutate(Opponent = factor(Opponent, lvls))
+
+offensive &lt;- offensive %&gt;%mutate_if(is.character,as.numeric,na.rm=TRUE)</code></pre>
+<pre><code>## Warning: NAs introduced by coercion</code></pre>
+<pre class="r"><code>#str(offensive)
+
+biography &lt;-biography %&gt;% mutate(Name=factor(Name))
+biography &lt;- biography %&gt;% mutate_at(c(&quot;Weight&quot;),as.numeric)
+height1 &lt;-strsplit(biography$Height,&quot;-&quot;)
+biography$Height &lt;-str_replace_all(biography$Height,'-','.')
+biography&lt;-biography%&gt;% mutate(Height=as.numeric(Height)* 0.3048) 
+#str(biography)
+
+defClean &lt;-defense
+offClean &lt;- offensive
+bioClean &lt;- biography
+
+str(defClean)</code></pre>
+<pre><code>## Classes 'tbl_df', 'tbl' and 'data.frame':    502 obs. of  11 variables:
+##  $ Name        : Factor w/ 43 levels &quot;Akers, Landen&quot;,..: 40 40 40 40 40 40 40 40 40 40 ...
+##  $ Opponent    : Factor w/ 13 levels &quot;UNI&quot;,&quot;Baylor&quot;,..: 1 3 12 2 9 13 11 8 7 10 ...
+##  $ Tackles_Solo: num  4 4 3 4 3 1 7 3 6 5 ...
+##  $ Tackles_ASST: num  4 7 5 2 2 1 1 2 1 5 ...
+##  $ Tackles_TFL : num  0 0 0 0 1 0 0 0 1 1 ...
+##  $ Tackles_Sack: num  0 0 0 0 0 0 0 0 0 1 ...
+##  $ Turnover_FF : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Turnover_FR : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Turnover_INT: num  0 0 1 0 0 0 0 0 1 0 ...
+##  $ Pass_QBH    : num  1 0 0 0 0 0 0 0 1 0 ...
+##  $ Pass_PB     : num  1 2 0 0 0 1 0 0 0 0 ...</code></pre>
+<pre class="r"><code>str(offClean)</code></pre>
+<pre><code>## Classes 'tbl_df', 'tbl' and 'data.frame':    195 obs. of  12 variables:
+##  $ Name           : Factor w/ 17 levels &quot;Akers, Landen&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ Opponent       : Factor w/ 13 levels &quot;UNI&quot;,&quot;Baylor&quot;,..: 1 3 12 2 9 13 11 8 7 10 ...
+##  $ Rushing_ATT    : num  0 0 1 0 0 0 0 0 0 0 ...
+##  $ Rushing_YDS    : num  0 0 8 0 0 0 0 0 0 0 ...
+##  $ Rushing_TD     : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Receiving_REC  : num  1 0 0 0 1 0 0 4 0 1 ...
+##  $ Receiving_YDS  : num  21 0 0 0 32 0 0 39 0 7 ...
+##  $ Receiving_TD   : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Passing_CMP-ATT: num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ Passing_YDS    : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ Passing_TD     : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ Passing_INT    : num  NA NA NA NA NA NA NA NA NA NA ...</code></pre>
+<pre class="r"><code>str(bioClean)</code></pre>
+<pre><code>## Classes 'tbl_df', 'tbl' and 'data.frame':    105 obs. of  7 variables:
+##  $ Name      : Factor w/ 105 levels &quot;Akers, Landen&quot;,..: 1 2 3 4 5 6 7 8 9 10 ...
+##  $ Position  : chr  &quot;Wide Receiver&quot; &quot;Tight End&quot; &quot;Wide Receiver&quot; &quot;Placekicker&quot; ...
+##  $ Height    : num  1.83 2.04 1.98 1.83 1.83 ...
+##  $ Weight    : num  188 245 204 195 190 235 255 285 300 215 ...
+##  $ Class     : chr  &quot;Redshirt Senior&quot; &quot;Redshirt Senior&quot; &quot;Redshirt Freshman&quot; &quot;Redshirt Senior&quot; ...
+##  $ Hometown  : chr  &quot;Cedar Rapids, Iowa&quot; &quot;Nixa, Mo.&quot; &quot;Seffner, Fla.&quot; &quot;Naperville, Ill.&quot; ...
+##  $ Highschool: chr  &quot;Washington&quot; &quot;Nixa&quot; &quot;Armwood&quot; &quot;Central&quot; ...</code></pre>
 </div>
 
 
