@@ -73,5 +73,15 @@ str(bioClean)
 
 part 2
 ```{r}
+#1
+defClean <-defClean %>% pivot_longer(Tackles_Solo:Pass_PB,names_to = "Statistic")
 
+#2
+ggplot(data=defClean, aes(x=value))+geom_histogram()+facet_wrap(~Statistic)
+
+#3
+
+#4
+bioClean <- bioClean %>% separate(Hometown, c("city","state"),",")
+bioClean%>% group_by(state)%>% summarize(number=n())
 ```

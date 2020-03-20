@@ -75,6 +75,12 @@ bioClean%>% group_by(state)%>% summarize(number=n())
 
 Part 3
 ```{r}
-offDataJoin
+offDataJoin <-left_join(offClean,bioClean, by="Name")
+offDataJoin%>%group_by(Name)%>%distinct(city,state)
+
+str(offDataJoin)
+offDataJoin %>%ggplot(aes(x=Weight,y=Receiving_YDS))+geom_point()
+
+
 ```
 
