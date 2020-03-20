@@ -1,7 +1,7 @@
 ---
-title: "individual2"
+title: "team"
 author: "Jian Kai Lee;jiankailee"
-date: "3/19/2020"
+date: "3/20/2020"
 output: html_document
 ---
 
@@ -9,43 +9,58 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Part 1
 
+Part 1
 ```{r }
 library(readxl)
 library(ggplot2)
 library(dplyr)
 library(tidyverse)
+
 defense <- read_excel('cyclonesFootball2019.xlsx', sheet='Defensive')
 offensive <- read_excel('cyclonesFootball2019.xlsx', sheet='Offensive')
 biography <- read_excel('cyclonesFootball2019.xlsx', sheet='Biography')
-#str(defense)
-#str(offensive)
 
+#rename opponent and mutate to factor
 defense <-defense %>% rename(Opponent=Opponent_Opponent) %>% mutate(Opponent=factor(Opponent))
+
+#mutate name to factor
 defense <-defense %>% mutate(Name=factor(Name))
+
+#order opponent column in a meaninnful fashion: factor and make 'UNI' the first level
 lvls <- as.character(sort(unique(defense$Opponent)))
 lvls <- c('UNI', lvls[lvls != 'UNI'])
 defense <- defense %>% mutate(Opponent = factor(Opponent, lvls))
 
+#mutate stat from chr to num
 defense <- defense%>%mutate_at(c("Tackles_Solo","Tackles_ASST","Tackles_TFL","Tackles_Sack","Turnover_FF","Turnover_FR","Turnover_INT","Pass_QBH","Pass_PB"),as.numeric)
-#str(defense)
 
+
+
+#rename opponent and mutate to factor
 offensive <-offensive %>% rename(Opponent=Opponent_Opponent) %>% mutate(Opponent=factor(Opponent))
+
+#mutate name to factor
 offensive <-offensive %>% mutate(Name=factor(Name))
+
+#order opponent column in a meaninnful fashion: factor and make 'UNI' the first level
 lvls <- as.character(sort(unique(offensive$Opponent)))
 lvls <- c('UNI', lvls[lvls != 'UNI'])
 offensive <- offensive %>% mutate(Opponent = factor(Opponent, lvls))
 
+#mutate stat from chr to num
 offensive <- offensive %>%mutate_if(is.character,as.numeric,na.rm=TRUE)
-#str(offensive)
 
+
+#rename opponent and mutate to factor
 biography <-biography %>% mutate(Name=factor(Name))
+
+#mutate weight to num
 biography <- biography %>% mutate_at(c("Weight"),as.numeric)
-height1 <-strsplit(biography$Height,"-")
+
+#mutate height to centimeter from chr
 biography$Height <-str_replace_all(biography$Height,'-','.')
 biography<-biography%>% mutate(Height=as.numeric(Height)* 30.48) 
-#str(biography)
 
 defClean <-defense
 offClean <- offensive
@@ -56,25 +71,7 @@ str(offClean)
 str(bioClean)
 ```
 
-Part 2
+part 2
 ```{r}
-defClean <-defClean %>% pivot_longer(Tackles_Solo:Pass_PB,names_to = "Statistic")
-
-ggplot(data=defClean, aes(x=value))+geom_histogram()+facet_wrap(~Statistic)
-
-unique(defClean$Opponent)
-helper<-c("West Virginia","Kansas State")
-#ggplot(data=defClean%>%filter(Opponent %in% helper),aes(x=))
-
-
-bioClean <- bioClean %>% separate(Hometown, c("city","state"),",")
-bioClean%>% group_by(state)%>% summarize(number=n())
-
 
 ```
-
-Part 3
-```{r}
-offDataJoin
-```
-
