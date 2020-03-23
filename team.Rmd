@@ -1,6 +1,6 @@
 ---
-title: "team"
-author: "Jian Kai Lee;jiankailee"
+title: "ds202_lab4"
+author: "Jian Kai Lee;jiankailee / Nick Matthews:nickmatthews713"
 date: "3/20/2020"
 output: html_document
 ---
@@ -29,7 +29,8 @@ defense$Opponent_Opponent <- factor(defense$Opponent_Opponent)
 # All offensive and defensive statistics made numeric
 defClean <- defense %>%
   mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:11)) %>%
-  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:11)) 
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:11))
+defe <- defClean
 
 offClean <- offensive %>%
   mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:12)) %>%
@@ -133,7 +134,7 @@ offBio %>%
 
 ### 3) Preformance of Brock Purdy vs the entire ISU team
 
-*For this problem, I think the best way to look at how brock purdy's preformance is related to the entire team preformance, is by looking at his passing yards. Brock Purdy usually has one job every play and that is to pass the ball or run it if he can. The further he passes/runs the ball successfully. the better hos preformance. We'll look at these numbers in relation with other players*
+*For this problem, we think the best way to look at how brock purdy's preformance is related to the entire team preformance, is by looking at his passing yards. Brock Purdy usually has one job every play and that is to pass the ball or run it if he can. The further he passes/runs the ball successfully. the better hos preformance. We'll look at these numbers in relation with other players*
 ```{r}
 
 Purdy <- offClean %>%
@@ -158,8 +159,26 @@ purdy_and_all %>%
 **Description:** It appears that at each game, as Purdy was more successful with his passing and rushing yards, so was the ISU offense with obtaining more yards
 
 ### 4) Exploring More
-```{r}
 
+*For this, we want to look at how defense relates to offense. We've already decided that the more solo tackles, the better the preformance. I want to see if more solo tackles yields more offensive yards gained for each game*
+```{r warning=FALSE}
 
+defeTackles <- defe %>%
+  group_by(Opponent_Opponent) %>%
+  drop_na(Tackles_Solo, Tackles_ASST) %>%
+  summarise(total_tackles = sum(Tackles_Solo + Tackles_ASST))
 
+offYards <- offClean %>%
+  drop_na(Receiving_YDS) %>%
+  group_by(Opponent_Opponent) %>%
+  summarise(total_recieved = sum(Receiving_YDS))
+
+defOff <- full_join(defeTackles, offYards, by="Opponent_Opponent")
+
+defOff %>%
+  ggplot(aes(x=total_recieved, total_tackles)) + geom_point() +
+  ggtitle("Total tackles by defense vs Total yards gained by offense for each game")
+  
 ```
+
+**Description:** With not a lot of games, It's hard to see a relationship here, but to me, it looks slightly positive. Offense and Defense play at different times, so its hard to find a solid relationship between their numbers. Though, its completely possible that they effect eachother. 
