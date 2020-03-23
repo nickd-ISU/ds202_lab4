@@ -9,79 +9,157 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r message=FALSE}
 
-Part 1
-```{r }
-library(readxl)
-library(ggplot2)
 library(dplyr)
+library(readxl)
 library(tidyverse)
-
 defense <- read_excel('cyclonesFootball2019.xlsx', sheet='Defensive')
 offensive <- read_excel('cyclonesFootball2019.xlsx', sheet='Offensive')
 biography <- read_excel('cyclonesFootball2019.xlsx', sheet='Biography')
 
-#rename opponent and mutate to factor
-defense <-defense %>% rename(Opponent=Opponent_Opponent) %>% mutate(Opponent=factor(Opponent))
+```
 
-#mutate name to factor
-defense <-defense %>% mutate(Name=factor(Name))
+### Part One
 
-#order opponent column in a meaninnful fashion: factor and make 'UNI' the first level
-lvls <- as.character(sort(unique(defense$Opponent)))
-lvls <- c('UNI', lvls[lvls != 'UNI'])
-defense <- defense %>% mutate(Opponent = factor(Opponent, lvls))
+```{r warning=FALSE}
+# Player and opponent names as factors
+defense$Name <- factor(defense$Name)
+defense$Opponent_Opponent <- factor(defense$Opponent_Opponent)
+# All offensive and defensive statistics made numeric
+defClean <- defense %>%
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:11)) %>%
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:11)) 
 
-#mutate stat from chr to num
-defense <- defense%>%mutate_at(c("Tackles_Solo","Tackles_ASST","Tackles_TFL","Tackles_Sack","Turnover_FF","Turnover_FR","Turnover_INT","Pass_QBH","Pass_PB"),as.numeric)
+offClean <- offensive %>%
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:12)) %>%
+  mutate_at(.funs=function(x) as.numeric(as.character(x)), .vars=c(3:12)) 
 
+bioClean <- biography %>%
+  separate(Height, into = c("Feet", "Inches")) %>%
+  mutate(Height = (as.numeric(Feet)*12 + as.numeric(Inches))) %>%
+  select(-c("Feet", "Inches"))
 
-
-#rename opponent and mutate to factor
-offensive <-offensive %>% rename(Opponent=Opponent_Opponent) %>% mutate(Opponent=factor(Opponent))
-
-#mutate name to factor
-offensive <-offensive %>% mutate(Name=factor(Name))
-
-#order opponent column in a meaninnful fashion: factor and make 'UNI' the first level
-lvls <- as.character(sort(unique(offensive$Opponent)))
-lvls <- c('UNI', lvls[lvls != 'UNI'])
-offensive <- offensive %>% mutate(Opponent = factor(Opponent, lvls))
-
-#mutate stat from chr to num
-offensive <- offensive %>%mutate_if(is.character,as.numeric,na.rm=TRUE)
-
-
-#rename opponent and mutate to factor
-biography <-biography %>% mutate(Name=factor(Name))
-
-#mutate weight to num
-biography <- biography %>% mutate_at(c("Weight"),as.numeric)
-
-#mutate height to centimeter from chr
-biography$Height <-str_replace_all(biography$Height,'-','.')
-biography<-biography%>% mutate(Height=as.numeric(Height)* 30.48) 
-
-defClean <-defense
-offClean <- offensive
-bioClean <- biography
+  
 
 str(defClean)
 str(offClean)
 str(bioClean)
+
 ```
 
-part 2
+### Part Two
+
+#### 1) Reformatting defClean
 ```{r}
-#1
-defClean <-defClean %>% pivot_longer(Tackles_Solo:Pass_PB,names_to = "Statistic")
 
-#2
-ggplot(data=defClean, aes(x=value))+geom_histogram()+facet_wrap(~Statistic)
+defClean <- defClean %>%
+  pivot_longer(Tackles_Solo:Pass_PB, names_to = "Statistic", values_to = "values")
 
-#3
+```
 
-#4
-bioClean <- bioClean %>% separate(Hometown, c("city","state"),",")
-bioClean%>% group_by(state)%>% summarize(number=n())
+#### 2) Histogram of defense
+```{r}
+
+defClean %>%
+  ggplot(aes(x=values)) + geom_histogram() + facet_wrap(~Statistic)
+
+```
+
+**Description:** The rare defensive statistics will be the ones happening around 0 times per game. So, intuitively, these statistics are Turnover_INT, Turnover_FR, Turnover_FF, and Tackles_Sack. 
+
+#### 3) Scatterplot of solo tackles against WV and KS
+```{r}
+
+KansasVirginiaST <- defClean %>%
+  filter(Opponent_Opponent == "Kansas State" | Opponent_Opponent == "West Virginia") %>%
+  filter(Statistic == "Tackles_Solo") %>%
+  pivot_wider(names_from = "Opponent_Opponent", values_from = "values") %>%
+  na.omit()
+
+#Rename columns so that its easier to read
+colnames(KansasVirginiaST)[colnames(KansasVirginiaST) == "West Virginia"] <- "West.Virginia"
+colnames(KansasVirginiaST)[colnames(KansasVirginiaST) == "Kansas State"] <- "Kansas.State"
+
+KansasVirginiaST %>%
+  ggplot(aes(x=West.Virginia, y=Kansas.State)) + geom_point() + xlab("Solo Tackles against WV") + ylab("Solo Tackles against KS") + ggtitle("Solo tackles by ISU")
+
+```
+
+**Description:** It's a little hard to tell, but looking closely, Iowa state players appear to have more solo tackles against Kansas state than West Virginia
+
+#### 4) Separating Hometown into two columns
+```{r}
+
+bioClean <- bioClean %>%
+  separate(Hometown, c("City", "State"), sep=",")
+
+playersByState <- bioClean %>%
+  group_by(State) %>%
+  summarise(Number_of_players = n())
+
+playersByState
+
+```
+
+### Part Three
+
+#### 1) Joining offensive data and biography data
+```{r}
+
+# Subset of the data bioClean dataframe filled with only information we need for the next few problems
+home_and_weight <- select(bioClean, c("Name", "City", "State", "Weight"))
+
+# Joined offensive and above subset using left_join so as to keep all offensive players stats, even if they don't have a hometown or weight recorded
+offBio <- offClean %>%
+  left_join(home_and_weight, by = "Name")
+
+```
+
+#### 2) Is there a relationship between weight and recieving yards?
+```{r}
+
+# summarise the mean receiving yards for each weight, Dropping any rows that dont have a recorded weight or receiving yards
+offBio %>%
+  drop_na(Weight, Receiving_YDS) %>%
+  group_by(Weight) %>%
+  summarise(Receiving_YDS = mean(Receiving_YDS)) %>%
+  ggplot(aes(x=Weight, y=Receiving_YDS)) + geom_bar(stat = "identity") +
+  ggtitle("Recieving Yards by Weight of Player")
+
+```
+
+**Description:** As expected, lighter players appear to have a higher average of recieving yards. This makes sense because receivers have to be light and fast. However, there is an onamoly. The weight class 252 has a high number of recieving yards. After some further investigation, it was none other than Charlie Kolar, who is an unusually heavy tight end.
+
+### 3) Preformance of Brock Purdy vs the entire ISU team
+
+*For this problem, I think the best way to look at how brock purdy's preformance is related to the entire team preformance, is by looking at his passing yards. Brock Purdy usually has one job every play and that is to pass the ball or run it if he can. The further he passes/runs the ball successfully. the better hos preformance. We'll look at these numbers in relation with other players*
+```{r}
+
+Purdy <- offClean %>%
+  filter(Name == "Purdy, Brock") %>%
+  mutate(total_yards = (Rushing_YDS + Passing_YDS))
+
+allISU <- offClean %>%
+  group_by(Opponent_Opponent) %>%
+  drop_na(Receiving_YDS) %>%
+  summarise(total_recieved = mean(Receiving_YDS))
+
+purdy_and_all <- full_join(Purdy, allISU, by="Opponent_Opponent")
+
+purdy_and_all %>%
+  ggplot(aes(x=total_yards, y=total_recieved)) + geom_point() +
+  ggtitle("Passing yards by Purdy vs Passing Yards recieved by all ISU") +
+  xlab("Yards passed and rushed successfully by Purdy") +
+  ylab("Yards recieved and rushed by the ISU team")
+
+```
+
+**Description:** It appears that at each game, as Purdy was more successful with his passing and rushing yards, so was the ISU offense with obtaining more yards
+
+### 4) Exploring More
+```{r}
+
+
+
 ```
